@@ -192,185 +192,201 @@ class _MoodSelectionPageState extends State<MoodSelectionPage>
     final double particleSpread = size.width * 0.25;
 
     // tile size responsive
-    final double circleSize = size.width * 0.34; // bigger circles
+    final double circleSize = size.width * 0.34;
 
-    return Scaffold(
-      body: Container(
-        width: size.width,
-        height: size.height,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: currentGradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return WillPopScope(
+      onWillPop: () async {
+        // Device back button navigates to HomeScreen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+        return false;
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const HomeScreen()),
+              );
+            },
           ),
         ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              // ================= Mood Layout =================
-              if (!showAnimation)
-                Column(
-                  children: [
-                    const SizedBox(height: 18),
-                    const Text(
-                      "Select Your Mood",
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 8,
-                            color: Colors.black45,
-                            offset: Offset(2, 2),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      "Tap one mood to continue",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                    ),
-
-                    // 🔥 THIS pushes everything down to center
-                    const SizedBox(height: 40),
-
-                    Expanded(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // ===== Top Row (Happy + Relaxed) =====
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  moodCircleTile(
-                                    mood: moods[0],
-                                    size: circleSize,
-                                    onTap: () => onMoodTap(
-                                      moods[0]["label"],
-                                      moods[0]["color"],
-                                      particleSpread,
-                                    ),
-                                  ),
-                                  moodCircleTile(
-                                    mood: moods[1],
-                                    size: circleSize,
-                                    onTap: () => onMoodTap(
-                                      moods[1]["label"],
-                                      moods[1]["color"],
-                                      particleSpread,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              // 🔥 BIG GAP BETWEEN ROWS
-                              const SizedBox(height: 38),
-
-                              // ===== Bottom Row (Sad + Angry) =====
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  moodCircleTile(
-                                    mood: moods[2],
-                                    size: circleSize,
-                                    onTap: () => onMoodTap(
-                                      moods[2]["label"],
-                                      moods[2]["color"],
-                                      particleSpread,
-                                    ),
-                                  ),
-                                  moodCircleTile(
-                                    mood: moods[3],
-                                    size: circleSize,
-                                    onTap: () => onMoodTap(
-                                      moods[3]["label"],
-                                      moods[3]["color"],
-                                      particleSpread,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-                  ],
-                ),
-
-              // ================= Animation =================
-              if (showAnimation)
-                Center(
-                  child: Stack(
+        body: Container(
+          width: size.width,
+          height: size.height,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: currentGradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                // ================= Mood Layout =================
+                if (!showAnimation)
+                  Column(
                     children: [
-                      ...List.generate(particleOffsets.length, (i) {
-                        final offset = particleOffsets[i] *
-                            (_particleController.value * particleSpread);
-
-                        return Positioned(
-                          left: size.width / 2 + offset.dx,
-                          top: size.height / 2 + offset.dy,
-                          child: Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              color: particleColors[i],
-                              shape: BoxShape.circle,
+                      const SizedBox(height: 18),
+                      const Text(
+                        "Select Your Mood",
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 8,
+                              color: Colors.black45,
+                              offset: Offset(2, 2),
                             ),
-                          ),
-                        );
-                      }),
-                      Center(
-                        child: ScaleTransition(
-                          scale: Tween(begin: 0.6, end: 1.6).animate(
-                            CurvedAnimation(
-                              parent: _scaleController,
-                              curve: Curves.easeOutBack,
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        "Tap one mood to continue",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      Expanded(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Top Row
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    moodCircleTile(
+                                      mood: moods[0],
+                                      size: circleSize,
+                                      onTap: () => onMoodTap(
+                                        moods[0]["label"],
+                                        moods[0]["color"],
+                                        particleSpread,
+                                      ),
+                                    ),
+                                    moodCircleTile(
+                                      mood: moods[1],
+                                      size: circleSize,
+                                      onTap: () => onMoodTap(
+                                        moods[1]["label"],
+                                        moods[1]["color"],
+                                        particleSpread,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 38),
+                                // Bottom Row
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    moodCircleTile(
+                                      mood: moods[2],
+                                      size: circleSize,
+                                      onTap: () => onMoodTap(
+                                        moods[2]["label"],
+                                        moods[2]["color"],
+                                        particleSpread,
+                                      ),
+                                    ),
+                                    moodCircleTile(
+                                      mood: moods[3],
+                                      size: circleSize,
+                                      onTap: () => onMoodTap(
+                                        moods[3]["label"],
+                                        moods[3]["color"],
+                                        particleSpread,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ClipOval(
-                                child: Image.asset(
-                                  moods.firstWhere(
-                                      (m) => m["label"] == tappedMood)["image"],
-                                  width: size.width * 0.35,
-                                  height: size.width * 0.35,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                "Feeling $tappedMood",
-                                style: TextStyle(
-                                  fontSize: size.width * 0.06,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                       ),
+                      const SizedBox(height: 16),
                     ],
                   ),
-                ),
-            ],
+                // ================= Animation =================
+                if (showAnimation)
+                  Center(
+                    child: Stack(
+                      children: [
+                        ...List.generate(particleOffsets.length, (i) {
+                          final offset = particleOffsets[i] *
+                              (_particleController.value * particleSpread);
+
+                          return Positioned(
+                            left: size.width / 2 + offset.dx,
+                            top: size.height / 2 + offset.dy,
+                            child: Container(
+                              width: 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                color: particleColors[i],
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          );
+                        }),
+                        Center(
+                          child: ScaleTransition(
+                            scale: Tween(begin: 0.6, end: 1.6).animate(
+                              CurvedAnimation(
+                                parent: _scaleController,
+                                curve: Curves.easeOutBack,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ClipOval(
+                                  child: Image.asset(
+                                    moods.firstWhere((m) =>
+                                        m["label"] == tappedMood)["image"],
+                                    width: size.width * 0.35,
+                                    height: size.width * 0.35,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  "Feeling $tappedMood",
+                                  style: TextStyle(
+                                    fontSize: size.width * 0.06,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

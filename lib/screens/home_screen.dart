@@ -6,6 +6,7 @@ import '../pages/chat_learning.dart';
 import '../pages/ai_voice_interaction.dart';
 import '../pages/mood_selection.dart';
 import '../pages/progress_daily_challenges.dart';
+import '../screens/signin_screen.dart'; // Import your SignIn page
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen>
     [Color(0xFF00B09B), Color(0xFF96C93D)],
     [Color(0xFF5F0A87), Color(0xFF20BF55)],
   ];
+
   int gradientIndex = 0;
   late AnimationController _gradientController;
   late Animation<Color?> _color1Anim;
@@ -90,14 +92,14 @@ class _HomeScreenState extends State<HomeScreen>
         "title": "Chat Learning",
         "subtitle": "Practice English by chatting with AI",
         "icon": Icons.chat_bubble_rounded,
-        "page": ChatLearningPage(level: selectedLevel),
+        "page": null, // will handle dynamically
         "color": Colors.cyan,
       },
       {
         "title": "AI Voice",
         "subtitle": "Speak naturally with AI",
         "icon": Icons.mic_rounded,
-        "page": AIVoiceInteractionPage(level: selectedLevel),
+        "page": null, // will handle dynamically
         "color": Colors.purpleAccent,
       },
       {
@@ -130,13 +132,31 @@ class _HomeScreenState extends State<HomeScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 16),
-                    const Text(
-                      "👋 Welcome back",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
+                    // BACK BUTTON
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            // Navigate to SignIn page
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const SignInScreen()),
+                            );
+                          },
+                          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                              color: Colors.white),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          "Home",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 24),
                     const Text(
@@ -157,10 +177,20 @@ class _HomeScreenState extends State<HomeScreen>
                             padding: const EdgeInsets.only(bottom: 16),
                             child: GestureDetector(
                               onTap: () {
+                                // Handle Chat & AI dynamically with selected level
+                                Widget page;
+                                if (module["title"] == "Chat Learning") {
+                                  page = ChatLearningPage(level: selectedLevel);
+                                } else if (module["title"] == "AI Voice") {
+                                  page = AIVoiceInteractionPage(
+                                      level: selectedLevel);
+                                } else {
+                                  page = module["page"];
+                                }
+
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
-                                      builder: (_) => module["page"]),
+                                  MaterialPageRoute(builder: (_) => page),
                                 );
                               },
                               child: ClipRRect(

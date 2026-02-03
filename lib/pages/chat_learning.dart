@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/learning_level.dart';
+import '../screens/home_screen.dart'; // Make sure path is correct
 
 class ChatLearningPage extends StatefulWidget {
   final LearningLevel level;
@@ -97,7 +98,6 @@ class _ChatLearningPageState extends State<ChatLearningPage>
 
     _scrollToBottom();
 
-    // Fake AI response but level based
     Future.delayed(const Duration(seconds: 1), () {
       if (!mounted) return;
       setState(() {
@@ -125,104 +125,123 @@ class _ChatLearningPageState extends State<ChatLearningPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: AnimatedContainer(
-        duration: const Duration(seconds: 4),
-        curve: Curves.easeInOut,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: currentGradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return WillPopScope(
+      onWillPop: () async {
+        // Handle device back
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+        return false;
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );
+            },
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-
-              // HEADER
-              Text(
-                "Chat Learning 💬",
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+        body: AnimatedContainer(
+          duration: const Duration(seconds: 4),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: currentGradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                // HEADER
+                Text(
+                  "Chat Learning 💬",
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-
-              Text(
-                "Level: ${widget.level.label}",
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-
-              const SizedBox(height: 16),
-
-              // CHAT LIST
-              Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: messages.length + (isTyping ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (isTyping && index == messages.length) {
-                      return _typingBubble();
-                    }
-
-                    final msg = messages[index];
-                    final isYou = msg["sender"] == "You";
-
-                    return _animatedBubble(text: msg["text"]!, isYou: isYou);
-                  },
+                const SizedBox(height: 6),
+                Text(
+                  "Level: ${widget.level.label}",
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
-              ),
+                const SizedBox(height: 16),
+                // CHAT LIST
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: messages.length + (isTyping ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (isTyping && index == messages.length) {
+                        return _typingBubble();
+                      }
 
-              // INPUT BAR
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _controller,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: const InputDecoration(
-                                hintText: "Type your message...",
-                                hintStyle: TextStyle(color: Colors.white70),
-                                border: InputBorder.none,
-                              ),
-                              onSubmitted: (_) => sendMessage(),
-                            ),
+                      final msg = messages[index];
+                      final isYou = msg["sender"] == "You";
+
+                      return _animatedBubble(text: msg["text"]!, isYou: isYou);
+                    },
+                  ),
+                ),
+                // INPUT BAR
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
                           ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.send_rounded,
-                              color: Colors.white,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _controller,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: const InputDecoration(
+                                  hintText: "Type your message...",
+                                  hintStyle: TextStyle(color: Colors.white70),
+                                  border: InputBorder.none,
+                                ),
+                                onSubmitted: (_) => sendMessage(),
+                              ),
                             ),
-                            onPressed: sendMessage,
-                          )
-                        ],
+                            IconButton(
+                              icon: const Icon(
+                                Icons.send_rounded,
+                                color: Colors.white,
+                              ),
+                              onPressed: sendMessage,
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../screens/home_screen.dart'; // Make sure this path is correct
 
 class ProgressDailyChallengesPage extends StatefulWidget {
   const ProgressDailyChallengesPage({super.key});
@@ -55,6 +56,7 @@ class _ProgressDailyChallengesPageState
 
   void _animateGradient() {
     Future.delayed(const Duration(seconds: 4), () {
+      if (!mounted) return;
       setState(() {
         currentIndex = (currentIndex + 1) % gradientColors.length;
         currentGradient = gradientColors[currentIndex];
@@ -73,191 +75,207 @@ class _ProgressDailyChallengesPageState
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    return Scaffold(
-      body: AnimatedContainer(
-        duration: const Duration(seconds: 4),
-        curve: Curves.easeInOut,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: currentGradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return WillPopScope(
+      onWillPop: () async {
+        // Device back button navigates to HomeScreen
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+        return false;
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const HomeScreen())); // Go to HomeScreen
+            },
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.06,
-              vertical: 12,
+        body: AnimatedContainer(
+          duration: const Duration(seconds: 4),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: currentGradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // HEADER
-                const Text(
-                  "Your Progress 🚀",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.06,
+                vertical: 12,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // HEADER
+                  const Text(
+                    "Your Progress 🚀",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // XP CARD
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                    child: Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                  // XP CARD
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "XP LEVEL",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "XP LEVEL",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            "120 XP",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                            const SizedBox(height: 6),
+                            const Text(
+                              "120 XP",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 14),
-                          AnimatedBuilder(
-                            animation: _progressAnim,
-                            builder: (_, __) {
-                              return Stack(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: LinearProgressIndicator(
-                                      value: _progressAnim.value,
-                                      minHeight: 16,
-                                      backgroundColor:
-                                          Colors.white.withOpacity(0.2),
-                                      valueColor: const AlwaysStoppedAnimation(
-                                          Colors.greenAccent),
+                            const SizedBox(height: 14),
+                            AnimatedBuilder(
+                              animation: _progressAnim,
+                              builder: (_, __) {
+                                return Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: LinearProgressIndicator(
+                                        value: _progressAnim.value,
+                                        minHeight: 16,
+                                        backgroundColor:
+                                            Colors.white.withOpacity(0.2),
+                                        valueColor:
+                                            const AlwaysStoppedAnimation(
+                                                Colors.greenAccent),
+                                      ),
                                     ),
-                                  ),
-                                  Positioned.fill(
-                                    child: Center(
-                                      child: Text(
-                                        "${(_progressAnim.value * 100).toInt()}%",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
+                                    Positioned.fill(
+                                      child: Center(
+                                        child: Text(
+                                          "${(_progressAnim.value * 100).toInt()}%",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ],
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 26),
+                  const SizedBox(height: 26),
 
-                // DAILY CHALLENGES
-                const Text(
-                  "Daily Challenges 🎯",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
+                  // DAILY CHALLENGES
+                  const Text(
+                    "Daily Challenges 🎯",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: challenges.length,
-                    itemBuilder: (context, index) {
-                      final challenge = challenges[index];
-                      final bool isDone = challenge["done"] as bool;
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: challenges.length,
+                      itemBuilder: (context, index) {
+                        final challenge = challenges[index];
+                        final bool isDone = challenge["done"] as bool;
 
-                      return TweenAnimationBuilder(
-                        tween: Tween<double>(begin: 50, end: 0),
-                        duration: Duration(milliseconds: 400 + index * 120),
-                        curve: Curves.easeOut,
-                        builder: (context, value, child) {
-                          return Transform.translate(
-                            offset: Offset(value, 0),
-                            child: Opacity(
-                              opacity: 1 - (value / 50),
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 14),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                isDone
-                                    ? Icons.check_circle_rounded
-                                    : Icons.radio_button_unchecked_rounded,
-                                color: isDone
-                                    ? Colors.greenAccent
-                                    : Colors.white54,
-                                size: 26,
+                        return TweenAnimationBuilder(
+                          tween: Tween<double>(begin: 50, end: 0),
+                          duration: Duration(milliseconds: 400 + index * 120),
+                          curve: Curves.easeOut,
+                          builder: (context, value, child) {
+                            return Transform.translate(
+                              offset: Offset(value, 0),
+                              child: Opacity(
+                                opacity: 1 - (value / 50),
+                                child: child,
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  challenge["title"] as String,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 14),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isDone
+                                      ? Icons.check_circle_rounded
+                                      : Icons.radio_button_unchecked_rounded,
+                                  color: isDone
+                                      ? Colors.greenAccent
+                                      : Colors.white54,
+                                  size: 26,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    challenge["title"] as String,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
-}
-
-void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: ProgressDailyChallengesPage(),
-  ));
 }

@@ -151,10 +151,9 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                             final bool isSelected =
                                 selectedLevel == level["title"];
 
-                            // Dynamic height based on screen
                             double cardHeight = screenHeight * 0.18;
-                            if (cardHeight > 180) cardHeight = 180; // max
-                            if (cardHeight < 140) cardHeight = 140; // min
+                            if (cardHeight > 180) cardHeight = 180;
+                            if (cardHeight < 140) cardHeight = 140;
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 16),

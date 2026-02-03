@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../models/learning_level.dart';
+import '../screens/home_screen.dart'; // Make sure the path is correct
 
 class AIVoiceInteractionPage extends StatefulWidget {
   final LearningLevel level;
@@ -57,7 +58,6 @@ class _AIVoiceInteractionPageState extends State<AIVoiceInteractionPage>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    // show prompt first
     _spokenText =
         "🎯 Practice Prompt (${widget.level.label}):\n$_practicePrompt";
   }
@@ -114,141 +114,154 @@ class _AIVoiceInteractionPageState extends State<AIVoiceInteractionPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: AnimatedContainer(
-        duration: const Duration(seconds: 4),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: currentGradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+        return false; // prevent default pop
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );
+            },
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
-                const Text(
-                  "AI Voice Assistant 🎧",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                Text(
-                  "Level: ${widget.level.label}",
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                Text(
-                  _isListening ? "Listening..." : "Tap the mic to speak",
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // Mild circular animation around mic
-                AnimatedBuilder(
-                  animation: _circleController,
-                  builder: (context, child) {
-                    double scale = 1 + 0.05 * (_circleController.value);
-                    return Transform.scale(
-                      scale: scale,
-                      child: child,
-                    );
-                  },
-                  child: GestureDetector(
-                    onTap: _toggleListening,
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor:
-                          _isListening ? Colors.deepPurple : Colors.white,
-                      child: Icon(
-                        _isListening ? Icons.mic : Icons.mic_none,
-                        size: 40,
-                        color: _isListening ? Colors.white : Colors.deepPurple,
-                      ),
+        body: AnimatedContainer(
+          duration: const Duration(seconds: 4),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: currentGradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  const Text(
+                    "AI Voice Assistant 🎧",
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // Spoken text container
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white30),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Level: ${widget.level.label}",
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
                     ),
-                    child: SingleChildScrollView(
-                      child: Text(
-                        _spokenText,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _isListening ? "Listening..." : "Tap the mic to speak",
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  AnimatedBuilder(
+                    animation: _circleController,
+                    builder: (context, child) {
+                      double scale = 1 + 0.05 * (_circleController.value);
+                      return Transform.scale(
+                        scale: scale,
+                        child: child,
+                      );
+                    },
+                    child: GestureDetector(
+                      onTap: _toggleListening,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor:
+                            _isListening ? Colors.deepPurple : Colors.white,
+                        child: Icon(
+                          _isListening ? Icons.mic : Icons.mic_none,
+                          size: 40,
+                          color:
+                              _isListening ? Colors.white : Colors.deepPurple,
                         ),
                       ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 20),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _resetPrompt,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                  const SizedBox(height: 30),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white30),
+                      ),
+                      child: SingleChildScrollView(
+                        child: Text(
+                          _spokenText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
                           ),
                         ),
-                        child: const Text(
-                          "Prompt",
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _stopListening,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _resetPrompt,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: const Text(
+                            "Prompt",
+                            style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ),
-                        child: const Text(
-                          "Stop",
-                          style: TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _stopListening,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: const Text(
+                            "Stop",
+                            style: TextStyle(fontSize: 16),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
