@@ -78,9 +78,6 @@ class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  bool _loading = false;
 
   @override
   void initState() {
@@ -103,40 +100,51 @@ class _SignInScreenState extends State<SignInScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
-
     try {
-      await _auth.signInWithEmailAndPassword(
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/home');
+      // Close loading
+      if (mounted) Navigator.pop(context);
+
+      // Navigate to home
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } on FirebaseAuthException catch (e) {
+      // Close loading
+      if (mounted) Navigator.pop(context);
+
       String msg = "Login failed";
 
-      if (e.code == "user-not-found") {
+      if (e.code == 'user-not-found') {
         msg = "No user found for this email";
-      } else if (e.code == "wrong-password") {
+      } else if (e.code == 'wrong-password') {
         msg = "Wrong password";
-      } else if (e.code == "invalid-email") {
+      } else if (e.code == 'invalid-email') {
         msg = "Invalid email format";
-      } else if (e.code == "network-request-failed") {
-        msg = "Check your internet connection";
+      } else if (e.code == 'invalid-credential') {
+        msg = "Invalid email or password";
       }
 
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg)),
       );
     } catch (e) {
-      if (!mounted) return;
+      if (mounted) Navigator.pop(context);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Something went wrong: $e")),
+        SnackBar(content: Text("Error: $e")),
       );
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -233,26 +241,16 @@ class _SignInScreenState extends State<SignInScreen> {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              onPressed: _loading ? null : _submit,
-                              child: _loading
-                                  ? const SizedBox(
-                                      height: 22,
-                                      width: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Text(
-                                      "Sign In",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                              onPressed: _submit,
+                              child: const Text(
+                                "Sign In",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
-
                           const SizedBox(height: 20),
 
                           // Sign Up Link
@@ -268,7 +266,6 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                             ),
                           ),
-
                           const Spacer(),
                         ],
                       ),

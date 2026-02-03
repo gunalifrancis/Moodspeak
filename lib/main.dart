@@ -23,7 +23,9 @@ class MoodEnglishApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Mood-Based English Learning',
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
+      theme: ThemeData(
+        primarySwatch: Colors.deepPurple,
+      ),
       initialRoute: '/mood',
       routes: {
         '/mood': (context) => const MoodScreen(),

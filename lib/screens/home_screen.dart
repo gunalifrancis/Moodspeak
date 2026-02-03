@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/learning_level.dart';
 import '../pages/selection_level.dart';
 import '../pages/chat_learning.dart';
@@ -18,7 +17,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   LearningLevel selectedLevel = LearningLevel.beginner;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final List<List<Color>> gradientColors = [
     [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
@@ -59,11 +57,6 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
-  void _signOut() async {
-    await _auth.signOut();
-    Navigator.pushReplacementNamed(context, '/signin');
-  }
-
   @override
   void dispose() {
     _gradientController.dispose();
@@ -72,7 +65,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final user = _auth.currentUser;
     final List<Map<String, dynamic>> modules = [
       {
         "title": "Mood Selection",
@@ -138,36 +130,13 @@ class _HomeScreenState extends State<HomeScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top bar with welcome and sign out
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "👋 Welcome back",
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              user?.email ?? "",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        IconButton(
-                          onPressed: _signOut,
-                          icon: const Icon(Icons.logout, color: Colors.white),
-                        ),
-                      ],
+                    const SizedBox(height: 16),
+                    const Text(
+                      "👋 Welcome back",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     const Text(

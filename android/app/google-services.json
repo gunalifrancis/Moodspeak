@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1097572292005",
+    "project_id": "moodspeak-b6bad",
+    "storage_bucket": "moodspeak-b6bad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1097572292005:android:6cd7e82eca74a3d308444c",
+        "android_client_info": {
+          "package_name": "com.example.moodspeak"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUiTb_6VtRtcbo4Bm9l5Gs9Zxqogu29SA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
