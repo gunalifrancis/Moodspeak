@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/emoji_tile.dart';
 import 'signin_screen.dart';
-import 'home_screen.dart';
 
 class MoodScreen extends StatelessWidget {
   const MoodScreen({super.key});
 
-  final double emojiSize = 60;
+  final double emojiSize = 60; // smaller size for mobile
 
   final List<Map<String, String>> emojis = const [
     {"emoji": "😊", "label": "Happy"},
@@ -19,9 +16,6 @@ class MoodScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final FirebaseAuth _auth = FirebaseAuth.instance;
-    final User? user = _auth.currentUser;
-
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -39,7 +33,7 @@ class MoodScreen extends StatelessWidget {
 
                   // Title
                   const Text(
-                    "ChatterMood",
+                    "ChatterMood", // changed title
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'Cinzel',
@@ -113,27 +107,12 @@ class MoodScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      onPressed: () async {
-                        if (user != null) {
-                          // Save last selected mood in Firestore (optional)
-                          final mood = emojis.first["label"];
-                          await FirebaseFirestore.instance
-                              .collection("users")
-                              .doc(user.uid)
-                              .set({"lastMood": mood}, SetOptions(merge: true));
-
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const HomeScreen()),
-                          );
-                        } else {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const SignInScreen()),
-                          );
-                        }
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const SignInScreen()),
+                        );
                       },
                       child: const Text(
                         "START",

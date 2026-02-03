@@ -1,12 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../models/learning_level.dart';
 import '../pages/selection_level.dart';
 import '../pages/chat_learning.dart';
 import '../pages/ai_voice_interaction.dart';
 import '../pages/mood_selection.dart';
 import '../pages/progress_daily_challenges.dart';
-import '../screens/signin_screen.dart'; // Import your SignIn page
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -65,6 +66,38 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
+  // ✅ Exit Confirmation Dialog
+  Future<bool> _showExitDialog() async {
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("Exit App"),
+        content: const Text("Do you want to exit the app?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("No"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
+
+    return shouldExit ?? false;
+  }
+
+  Future<void> _exitApp() async {
+    final ok = await _showExitDialog();
+    if (ok) {
+      SystemNavigator.pop(); // ✅ exit app
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> modules = [
@@ -92,14 +125,14 @@ class _HomeScreenState extends State<HomeScreen>
         "title": "Chat Learning",
         "subtitle": "Practice English by chatting with AI",
         "icon": Icons.chat_bubble_rounded,
-        "page": null, // will handle dynamically
+        "page": null,
         "color": Colors.cyan,
       },
       {
         "title": "AI Voice",
         "subtitle": "Speak naturally with AI",
         "icon": Icons.mic_rounded,
-        "page": null, // will handle dynamically
+        "page": null,
         "color": Colors.purpleAccent,
       },
       {
@@ -111,172 +144,184 @@ class _HomeScreenState extends State<HomeScreen>
       },
     ];
 
-    return AnimatedBuilder(
-      animation: _gradientController,
-      builder: (context, child) {
-        return Scaffold(
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  _color1Anim.value ?? gradientColors[0][0],
-                  _color2Anim.value ?? gradientColors[0][1],
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return WillPopScope(
+      // ✅ Hardware back button
+      onWillPop: () async {
+        final ok = await _showExitDialog();
+        if (ok) {
+          SystemNavigator.pop();
+        }
+        return false;
+      },
+      child: AnimatedBuilder(
+        animation: _gradientController,
+        builder: (context, child) {
+          return Scaffold(
+            body: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    _color1Anim.value ?? gradientColors[0][0],
+                    _color2Anim.value ?? gradientColors[0][1],
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // BACK BUTTON
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: () {
-                            // Navigate to SignIn page
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const SignInScreen()),
-                            );
-                          },
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                              color: Colors.white),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          "Home",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ✅ BACK BUTTON with exit confirmation
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: _exitApp,
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      "Learn English\nBased on Your Mood!",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                          const SizedBox(width: 6),
+                          const Text(
+                            "Home",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: modules.length,
-                        itemBuilder: (context, index) {
-                          final module = modules[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: GestureDetector(
-                              onTap: () {
-                                // Handle Chat & AI dynamically with selected level
-                                Widget page;
-                                if (module["title"] == "Chat Learning") {
-                                  page = ChatLearningPage(level: selectedLevel);
-                                } else if (module["title"] == "AI Voice") {
-                                  page = AIVoiceInteractionPage(
-                                      level: selectedLevel);
-                                } else {
-                                  page = module["page"];
-                                }
 
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => page),
-                                );
-                              },
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(20),
-                                child: BackdropFilter(
-                                  filter:
-                                      ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                                  child: Container(
-                                    height: 100,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          (module["color"] as Color)
-                                              .withOpacity(0.4),
-                                          Colors.white.withOpacity(0.05),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      borderRadius: BorderRadius.circular(22),
-                                      border: Border.all(
-                                        color: Colors.white.withOpacity(0.25),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor:
-                                              Colors.black.withOpacity(0.3),
-                                          child: Icon(
-                                            module["icon"],
-                                            color: Colors.white,
-                                            size: 30,
-                                          ),
+                      const SizedBox(height: 24),
+
+                      const Text(
+                        "Learn English\nBased on Your Mood!",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: modules.length,
+                          itemBuilder: (context, index) {
+                            final module = modules[index];
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Widget page;
+
+                                  if (module["title"] == "Chat Learning") {
+                                    page =
+                                        ChatLearningPage(level: selectedLevel);
+                                  } else if (module["title"] == "AI Voice") {
+                                    page = AIVoiceInteractionPage(
+                                        level: selectedLevel);
+                                  } else {
+                                    page = module["page"];
+                                  }
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => page),
+                                  );
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(
+                                        sigmaX: 18, sigmaY: 18),
+                                    child: Container(
+                                      height: 100,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            (module["color"] as Color)
+                                                .withOpacity(0.4),
+                                            Colors.white.withOpacity(0.05),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
                                         ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                module["title"],
-                                                style: const TextStyle(
+                                        borderRadius: BorderRadius.circular(22),
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.25),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 30,
+                                            backgroundColor:
+                                                Colors.black.withOpacity(0.3),
+                                            child: Icon(
+                                              module["icon"],
+                                              color: Colors.white,
+                                              size: 30,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  module["title"],
+                                                  style: const TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 18,
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                module["subtitle"],
-                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  module["subtitle"],
+                                                  style: const TextStyle(
                                                     color: Colors.white70,
-                                                    fontSize: 14),
-                                              ),
-                                            ],
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                        const Icon(
-                                          Icons.arrow_forward_ios_rounded,
-                                          color: Colors.white70,
-                                          size: 18,
-                                        ),
-                                      ],
+                                          const Icon(
+                                            Icons.arrow_forward_ios_rounded,
+                                            color: Colors.white70,
+                                            size: 18,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
