@@ -71,4 +71,5 @@ class DefaultFirebaseOptions {
     authDomain: 'moodspeak-b6bad.firebaseapp.com',
     storageBucket: 'moodspeak-b6bad.firebasestorage.app',
   );
+
 }

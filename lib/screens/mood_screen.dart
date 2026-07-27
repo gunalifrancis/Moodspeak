@@ -5,7 +5,7 @@ import 'signin_screen.dart';
 class MoodScreen extends StatelessWidget {
   const MoodScreen({super.key});
 
-  final double emojiSize = 60; // smaller size for mobile
+  final double emojiSize = 60;
 
   final List<Map<String, String>> emojis = const [
     {"emoji": "😊", "label": "Happy"},
@@ -21,8 +21,7 @@ class MoodScreen extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           // Background
-          Image.asset('assets/bg.jpg', fit: BoxFit.cover),
-          Container(color: Colors.black.withOpacity(0.35)),
+          Image.asset('assets/bg.png', fit: BoxFit.cover),
 
           SafeArea(
             child: Padding(
@@ -33,21 +32,14 @@ class MoodScreen extends StatelessWidget {
 
                   // Title
                   const Text(
-                    "ChatterMood", // changed title
+                    "ChatterMood",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'Cinzel',
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Colors.black,
                       letterSpacing: 1.2,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 6,
-                          color: Colors.black45,
-                          offset: Offset(2, 2),
-                        ),
-                      ],
                     ),
                   ),
 
@@ -60,7 +52,7 @@ class MoodScreen extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Cinzel',
                       fontSize: 16,
-                      color: Colors.white70,
+                      color: Colors.black87,
                       letterSpacing: 0.8,
                     ),
                   ),
@@ -78,7 +70,7 @@ class MoodScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // Emojis row
+                  // Emojis
                   Flexible(
                     flex: 1,
                     child: Row(
@@ -102,7 +94,8 @@ class MoodScreen extends StatelessWidget {
                     height: 50,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
+                        backgroundColor: const Color(0xFF9C6ADE),
+                        foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -111,7 +104,8 @@ class MoodScreen extends StatelessWidget {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const SignInScreen()),
+                            builder: (_) => const SignInScreen(),
+                          ),
                         );
                       },
                       child: const Text(
@@ -120,7 +114,6 @@ class MoodScreen extends StatelessWidget {
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.1,
-                          color: Colors.white,
                         ),
                       ),
                     ),

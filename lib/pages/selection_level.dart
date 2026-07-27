@@ -112,13 +112,13 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                         IconButton(
                           onPressed: () => Navigator.pop(context),
                           icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                              color: Colors.white),
+                              color: Color.fromARGB(255, 7, 7, 7)),
                         ),
                         const SizedBox(width: 6),
                         const Text(
                           "Select Your Level",
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color.fromARGB(255, 7, 7, 7),
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
                             fontFamily: "Poppins",
@@ -132,7 +132,7 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                       child: Text(
                         "Choose your current skill level",
                         style: TextStyle(
-                          color: Colors.white70,
+                          color: Color.fromARGB(255, 7, 7, 7),
                           fontSize: 14,
                           fontFamily: "RobotoMono",
                         ),
@@ -170,8 +170,9 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                                     borderRadius: BorderRadius.circular(26),
                                     border: Border.all(
                                       color: isSelected
-                                          ? Colors.white
-                                          : Colors.white.withOpacity(0.25),
+                                          ? const Color.fromARGB(255, 7, 7, 7)
+                                          : const Color.fromARGB(255, 7, 7, 7)
+                                              .withOpacity(0.25),
                                       width: isSelected ? 2.2 : 1,
                                     ),
                                     boxShadow: [
@@ -194,7 +195,8 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                                             colors: [
                                               (level["color"] as Color)
                                                   .withOpacity(0.45),
-                                              Colors.white.withOpacity(0.08),
+                                              const Color.fromARGB(255, 7, 7, 7)
+                                                  .withOpacity(0.08),
                                             ],
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
@@ -228,7 +230,8 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                                                   Text(
                                                     level["title"],
                                                     style: const TextStyle(
-                                                      color: Colors.white,
+                                                      color: Color.fromARGB(
+                                                          255, 7, 7, 7),
                                                       fontSize: 22,
                                                       fontWeight:
                                                           FontWeight.bold,
@@ -239,7 +242,8 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                                                   Text(
                                                     level["subtitle"],
                                                     style: const TextStyle(
-                                                      color: Colors.white70,
+                                                      color: Color.fromARGB(
+                                                          255, 7, 7, 7),
                                                       fontSize: 14,
                                                       fontFamily: "RobotoMono",
                                                     ),
@@ -255,8 +259,15 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                                                           vertical: 10),
                                                       decoration: BoxDecoration(
                                                         color: isSelected
-                                                            ? Colors.white
-                                                            : Colors.white
+                                                            ? const Color
+                                                                .fromARGB(
+                                                                255, 7, 7, 7)
+                                                            : const Color
+                                                                    .fromARGB(
+                                                                    255,
+                                                                    7,
+                                                                    7,
+                                                                    7)
                                                                 .withOpacity(
                                                                     0.15),
                                                         borderRadius:
@@ -276,7 +287,7 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                                                             size: 18,
                                                             color: isSelected
                                                                 ? Colors.black
-                                                                : Colors.white,
+                                                                : Colors.black,
                                                           ),
                                                           const SizedBox(
                                                               width: 8),
@@ -292,7 +303,7 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                                                               color: isSelected
                                                                   ? Colors.black
                                                                   : Colors
-                                                                      .white,
+                                                                      .black,
                                                             ),
                                                           ),
                                                         ],
@@ -323,7 +334,9 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                           onPressed: () {
                             if (widget.onLevelSelected != null) {
                               final level = LearningLevel.values.firstWhere(
-                                  (lvl) => lvl.label == selectedLevel);
+                                (lvl) => lvl.name == selectedLevel,
+                                orElse: () => LearningLevel.beginner,
+                              );
                               widget.onLevelSelected!(level);
                             }
                             Navigator.pop(context);
@@ -341,7 +354,7 @@ class _SelectionLevelPageState extends State<SelectionLevelPage>
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: Colors.black,
                               fontFamily: "Poppins",
                             ),
                           ),

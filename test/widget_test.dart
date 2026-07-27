@@ -1,9 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodspeak/main.dart';
+import 'package:flutter/material.dart';
+import 'package:moodspeak/screens/home_screen.dart';
 
 void main() {
   testWidgets('HomePage module cards exist', (tester) async {
-    await tester.pumpWidget(const MoodEnglishApp());
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: HomeScreen(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
 
     expect(find.text('Mood-Based English Learning'), findsOneWidget);
 
@@ -20,11 +27,5 @@ void main() {
     for (var title in moduleTitles) {
       expect(find.text(title), findsOneWidget);
     }
-
-    // Tap first module
-    await tester.tap(find.text('Mood Selection'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('You selected:'), findsNothing); // Mood page starts empty
   });
 }

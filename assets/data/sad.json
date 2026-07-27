@@ -1,0 +1,38 @@
+{
+  "empty_input": {
+    "responses": [
+      "💙 It’s okay. Try one small English sentence.",
+      "No pressure 💙 Say something simple."
+    ]
+  },
+
+  "greeting": {
+    "inputs": ["hi", "hello", "hey"],
+    "responses": [
+      "Hello 💙 I’m here to help you.",
+      "Hi 💙 Let’s practice English together."
+    ]
+  },
+
+  "practice": {
+    "inputs": ["practice", "learn", "improve", "english", "speaking"],
+    "responses": [
+      "You’re doing fine 💙 Try: I am learning English.",
+      "Step by step 💙 Say one simple sentence."
+    ]
+  },
+
+  "sentence_feedback": {
+    "responses": [
+      "Well done 💙 You’re improving.",
+      "Good job 💙 Keep going."
+    ]
+  },
+
+  "fallback": {
+    "responses": [
+      "💙 You’re not alone. Try again.",
+      "Say one simple English sentence."
+    ]
+  }
+}

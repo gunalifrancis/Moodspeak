@@ -1,13 +1,17 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../models/learning_level.dart';
-import '../pages/selection_level.dart';
+import '../controller/mood_controller.dart';
 import '../pages/chat_learning.dart';
 import '../pages/ai_voice_interaction.dart';
-import '../pages/mood_selection.dart';
 import '../pages/progress_daily_challenges.dart';
+import '../pages/quiz_menu_page.dart';
+import 'profile_screen.dart';
+
+////////////////////////////////////////////////////////////
+/// HOME SCREEN
+////////////////////////////////////////////////////////////
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,312 +20,334 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
-  LearningLevel selectedLevel = LearningLevel.beginner;
+class _HomeScreenState extends State<HomeScreen> {
+  int currentIndex = 0;
 
-  final List<List<Color>> gradientColors = [
-    [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
-    [Color(0xFF11998E), Color(0xFF38EF7D)],
-    [Color(0xFFFF416C), Color(0xFFFF4B2B)],
-    [Color(0xFF00B09B), Color(0xFF96C93D)],
-    [Color(0xFF5F0A87), Color(0xFF20BF55)],
+  final List<Widget> pages = const [
+    HomeTab(),
+    AIVoiceInteractionPage(),
+    ChatLearningPage(),
+    QuizMenuPage(),
+    ProgressDailyChallengesPage(),
+    ProfileScreen(),
   ];
 
-  int gradientIndex = 0;
-  late AnimationController _gradientController;
-  late Animation<Color?> _color1Anim;
-  late Animation<Color?> _color2Anim;
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return Scaffold(
+      body: IndexedStack(index: currentIndex, children: pages),
+
+      ////////////////////////////////////////////////////////////
+      /// 🔥 BOTTOM NAV
+      ////////////////////////////////////////////////////////////
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF9C6ADE),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12)],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BottomNavigationBar(
+            currentIndex: currentIndex,
+            onTap: (i) => setState(() => currentIndex = i),
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: const Color(0xFF9C6ADE),
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.white70,
+            elevation: 0,
+            items: [
+              const BottomNavigationBarItem(
+                  icon: Icon(Icons.home), label: "Home"),
+              const BottomNavigationBarItem(
+                  icon: Icon(Icons.mic), label: "AI Voice"),
+              const BottomNavigationBarItem(
+                  icon: Icon(Icons.chat), label: "Chat"),
+              const BottomNavigationBarItem(
+                  icon: Icon(Icons.quiz), label: "Quiz"),
+              const BottomNavigationBarItem(
+                  icon: Icon(Icons.bar_chart), label: "Progress"),
+
+              ////////////////////////////////////////////////////////////
+              /// PROFILE IMAGE
+              ////////////////////////////////////////////////////////////
+              BottomNavigationBarItem(
+                icon: user == null
+                    ? const Icon(Icons.account_circle)
+                    : StreamBuilder<DocumentSnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection("users")
+                            .doc(user.uid)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData ||
+                              snapshot.data!.data() == null) {
+                            return const Icon(Icons.account_circle);
+                          }
+
+                          final data =
+                              snapshot.data!.data() as Map<String, dynamic>;
+
+                          if (data["profileImage"] != null &&
+                              data["profileImage"] != "") {
+                            return CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Colors.white,
+                              child: CircleAvatar(
+                                radius: 14,
+                                backgroundImage:
+                                    NetworkImage(data["profileImage"]),
+                              ),
+                            );
+                          }
+
+                          return const Icon(Icons.account_circle);
+                        },
+                      ),
+                label: "Profile",
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+////////////////////////////////////////////////////////////
+/// HOME TAB
+////////////////////////////////////////////////////////////
+
+class HomeTab extends StatefulWidget {
+  const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
+  int boomIndex = -1;
+
+  late AnimationController particleController;
+
+  String selectedEmoji = "😐";
+
+  final moods = const [
+    {"title": "Happy", "img": "assets/happy.jpeg"},
+    {"title": "Relaxed", "img": "assets/relax.jpeg"},
+    {"title": "Sad", "img": "assets/sad.jpeg"},
+    {"title": "Angry", "img": "assets/angry.jpeg"},
+  ];
+
+  final List<String> emojis = ["😊", "😌", "😢", "😡"];
 
   @override
   void initState() {
     super.initState();
-    _gradientController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 6));
-    _setNextGradient();
-  }
 
-  void _setNextGradient() {
-    final nextIndex = (gradientIndex + 1) % gradientColors.length;
-
-    _color1Anim = ColorTween(
-      begin: gradientColors[gradientIndex][0],
-      end: gradientColors[nextIndex][0],
-    ).animate(_gradientController);
-
-    _color2Anim = ColorTween(
-      begin: gradientColors[gradientIndex][1],
-      end: gradientColors[nextIndex][1],
-    ).animate(_gradientController);
-
-    _gradientController.forward(from: 0).whenComplete(() {
-      gradientIndex = nextIndex;
-      _setNextGradient();
-    });
+    particleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    )..addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _gradientController.dispose();
+    particleController.dispose();
     super.dispose();
   }
 
-  // ✅ Exit Confirmation Dialog
-  Future<bool> _showExitDialog() async {
-    final shouldExit = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Exit App"),
-        content: const Text("Do you want to exit the app?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("No"),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Yes"),
-          ),
-        ],
-      ),
-    );
+  void handleTap(int index) async {
+    setState(() {
+      boomIndex = index;
+      selectedEmoji = emojis[index];
+    });
 
-    return shouldExit ?? false;
-  }
+    particleController.forward(from: 0);
 
-  Future<void> _exitApp() async {
-    final ok = await _showExitDialog();
-    if (ok) {
-      SystemNavigator.pop(); // ✅ exit app
-    }
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    try {
+      MoodController.instance.setMood(moods[index]["title"]!);
+    } catch (_) {}
+
+    setState(() => boomIndex = -1);
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> modules = [
-      {
-        "title": "Mood Selection",
-        "subtitle": "Select your current mood",
-        "icon": Icons.mood_rounded,
-        "page": MoodSelectionPage(),
-        "color": Colors.pinkAccent,
-      },
-      {
-        "title": "Level Selection",
-        "subtitle": "Choose your learning level",
-        "icon": Icons.school_rounded,
-        "page": SelectionLevelPage(
-          onLevelSelected: (level) {
-            setState(() {
-              selectedLevel = level;
-            });
-          },
+    return Stack(
+      children: [
+        ////////////////////////////////////////////////////////////
+        /// BACKGROUND
+        ////////////////////////////////////////////////////////////
+        Positioned.fill(
+          child: Image.asset("assets/bg.png", fit: BoxFit.cover),
         ),
-        "color": Colors.greenAccent,
-      },
-      {
-        "title": "Chat Learning",
-        "subtitle": "Practice English by chatting with AI",
-        "icon": Icons.chat_bubble_rounded,
-        "page": null,
-        "color": Colors.cyan,
-      },
-      {
-        "title": "AI Voice",
-        "subtitle": "Speak naturally with AI",
-        "icon": Icons.mic_rounded,
-        "page": null,
-        "color": Colors.purpleAccent,
-      },
-      {
-        "title": "Daily Progress",
-        "subtitle": "Check your daily challenges",
-        "icon": Icons.timeline_rounded,
-        "page": ProgressDailyChallengesPage(),
-        "color": Colors.orangeAccent,
-      },
-    ];
 
-    return WillPopScope(
-      // ✅ Hardware back button
-      onWillPop: () async {
-        final ok = await _showExitDialog();
-        if (ok) {
-          SystemNavigator.pop();
-        }
-        return false;
-      },
-      child: AnimatedBuilder(
-        animation: _gradientController,
-        builder: (context, child) {
-          return Scaffold(
-            body: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    _color1Anim.value ?? gradientColors[0][0],
-                    _color2Anim.value ?? gradientColors[0][1],
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ✅ BACK BUTTON with exit confirmation
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: _exitApp,
-                            icon: const Icon(
-                              Icons.arrow_back_ios_new_rounded,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            "Home",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+        Positioned.fill(
+          child: Container(
+            color: Colors.white.withOpacity(0.15),
+          ),
+        ),
+
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: Column(
+              children: [
+                const SizedBox(height: 30),
+
+                ////////////////////////////////////////////////////////////
+                /// TITLE (CINZEL APPLIED)
+                ////////////////////////////////////////////////////////////
+                Column(
+                  children: [
+                    const Text(
+                      "Mood English",
+                      style: TextStyle(
+                        fontFamily: 'Cinzel',
+                        fontSize: 34,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        letterSpacing: 1.2,
                       ),
-
-                      const SizedBox(height: 24),
-
-                      const Text(
-                        "Learn English\nBased on Your Mood!",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(width: 60, height: 1, color: Colors.white70),
+                        const SizedBox(width: 10),
+                        Text(
+                          selectedEmoji,
+                          style: const TextStyle(fontSize: 28),
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        Container(width: 60, height: 1, color: Colors.white70),
+                      ],
+                    ),
+                  ],
+                ),
 
-                      const SizedBox(height: 24),
+                const SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    "Learn English Based on Your Mood!",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Cinzel',
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
 
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: modules.length,
-                          itemBuilder: (context, index) {
-                            final module = modules[index];
+                const SizedBox(height: 10),
 
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: GestureDetector(
-                                onTap: () {
-                                  Widget page;
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    "How are you feeling today?",
+                    style: TextStyle(
+                      fontFamily: 'Cinzel',
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
 
-                                  if (module["title"] == "Chat Learning") {
-                                    page =
-                                        ChatLearningPage(level: selectedLevel);
-                                  } else if (module["title"] == "AI Voice") {
-                                    page = AIVoiceInteractionPage(
-                                        level: selectedLevel);
-                                  } else {
-                                    page = module["page"];
-                                  }
+                const SizedBox(height: 30),
 
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => page),
-                                  );
-                                },
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: BackdropFilter(
-                                    filter: ImageFilter.blur(
-                                        sigmaX: 18, sigmaY: 18),
-                                    child: Container(
-                                      height: 100,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            (module["color"] as Color)
-                                                .withOpacity(0.4),
-                                            Colors.white.withOpacity(0.05),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(22),
-                                        border: Border.all(
-                                          color: Colors.white.withOpacity(0.25),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          CircleAvatar(
-                                            radius: 30,
-                                            backgroundColor:
-                                                Colors.black.withOpacity(0.3),
-                                            child: Icon(
-                                              module["icon"],
-                                              color: Colors.white,
-                                              size: 30,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  module["title"],
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  module["subtitle"],
-                                                  style: const TextStyle(
-                                                    color: Colors.white70,
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const Icon(
-                                            Icons.arrow_forward_ios_rounded,
-                                            color: Colors.white70,
-                                            size: 18,
-                                          ),
+                ////////////////////////////////////////////////////////////
+                /// GRID
+                ////////////////////////////////////////////////////////////
+                Expanded(
+                  child: GridView.builder(
+                    itemCount: moods.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 18,
+                      mainAxisSpacing: 18,
+                    ),
+                    itemBuilder: (context, index) {
+                      final mood = moods[index];
+
+                      return GestureDetector(
+                        onTap: () => handleTap(index),
+                        child: AnimatedScale(
+                          duration: const Duration(milliseconds: 200),
+                          scale: boomIndex == index ? 1.08 : 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(22),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.25),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                )
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(22),
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: Image.asset(
+                                      mood["img"]!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.transparent,
+                                          Colors.black.withOpacity(0.5),
                                         ],
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
                                       ),
                                     ),
                                   ),
-                                ),
+                                  Positioned(
+                                    bottom: 12,
+                                    left: 0,
+                                    right: 0,
+                                    child: Text(
+                                      mood["title"]!,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontFamily: 'Cinzel',
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
-              ),
+              ],
             ),
-          );
-        },
-      ),
+          ),
+        ),
+      ],
     );
   }
 }

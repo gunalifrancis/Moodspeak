@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class MoodEmojiTile extends StatelessWidget {
-  final String image; // ✅ changed from emoji
+  final String emoji;
   final String label;
   final Color color;
   final double size;
@@ -9,11 +9,11 @@ class MoodEmojiTile extends StatelessWidget {
 
   const MoodEmojiTile({
     super.key,
-    required this.image, // ✅ required image
+    required this.emoji,
     required this.label,
     required this.color,
     required this.onTap,
-    this.size = 80, // default size
+    this.size = 80, // make it default bigger
   });
 
   @override
@@ -28,16 +28,17 @@ class MoodEmojiTile extends StatelessWidget {
             height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: color.withOpacity(0.3),
+              color: color.withOpacity(0.3), // circle background color
               border: Border.all(
                 color: Colors.white.withOpacity(0.3),
                 width: 2,
               ),
             ),
-            child: ClipOval(
-              child: Image.asset(
-                image,
-                fit: BoxFit.cover,
+            alignment: Alignment.center,
+            child: Text(
+              emoji,
+              style: TextStyle(
+                fontSize: size * 0.6, // emoji fits nicely inside
               ),
             ),
           ),

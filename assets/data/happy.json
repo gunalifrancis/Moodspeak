@@ -1,0 +1,64 @@
+{
+  "empty_input": {
+    "inputs": [""],
+    "responses": [
+      "😊 Say something in English! Let’s enjoy learning.",
+      "Come on 😄 Try one happy English sentence.",
+      "Hey 😊 Type a simple English sentence to begin."
+    ]
+  },
+
+  "greeting": {
+    "inputs": ["hi", "hello", "hey", "hai"],
+    "responses": [
+      "Hello 😊 Ready to practice English?",
+      "Hi there 😄 Let’s learn English happily!",
+      "Hey! 😊 I’m excited to practice English with you."
+    ]
+  },
+
+  "practice": {
+    "inputs": [
+      "practice",
+      "learn",
+      "improve",
+      "english",
+      "speaking",
+      "talk",
+      "communication"
+    ],
+    "responses": [
+      "Awesome! 😊 Say: I feel happy today.",
+      "Great! 😄 Try one short English sentence.",
+      "Nice choice 😊 Say: Learning English is fun.",
+      "Cool! 😄 Say one sentence about your day."
+    ]
+  },
+
+  "sentence_feedback": {
+    "inputs": [
+      "i am",
+      "i feel",
+      "i like",
+      "today",
+      "my",
+      "learning"
+    ],
+    "responses": [
+      "Nice sentence! 😊 Can you say one more?",
+      "Well done 😄 Keep going!",
+      "Great job 😊 Your English is improving.",
+      "Awesome 😄 That sentence sounds good!"
+    ]
+  },
+
+  "fallback": {
+    "inputs": [],
+    "responses": [
+      "😊 Try a simple English sentence.",
+      "Say one short sentence in English.",
+      "😄 Don’t worry, try again with a simple sentence.",
+      "😊 You’re doing great. Say anything in English."
+    ]
+  }
+}

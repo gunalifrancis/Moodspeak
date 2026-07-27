@@ -1,94 +1,156 @@
-import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import '../models/learning_level.dart';
-import '../screens/home_screen.dart'; // Make sure path is correct
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:moodspeak/controller/chat_controller.dart';
+import 'package:moodspeak/controller/mood_controller.dart';
+import '../screens/home_screen.dart'; // make sure this path is correct
 
 class ChatLearningPage extends StatefulWidget {
-  final LearningLevel level;
-
-  const ChatLearningPage({
-    super.key,
-    required this.level,
-  });
+  const ChatLearningPage({super.key});
 
   @override
   State<ChatLearningPage> createState() => _ChatLearningPageState();
 }
 
-class _ChatLearningPageState extends State<ChatLearningPage>
-    with SingleTickerProviderStateMixin {
+class _ChatLearningPageState extends State<ChatLearningPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   final List<Map<String, String>> messages = [];
   bool isTyping = false;
 
-  // Gradient animation
-  final List<List<Color>> gradientColors = [
-    [Color(0xFF5F0A87), Color(0xFF20BF55)],
-    [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
-    [Color(0xFF00B09B), Color(0xFF96C93D)],
-    [Color(0xFFFF416C), Color(0xFFFF4B2B)],
-    [Color(0xFF11998E), Color(0xFF38EF7D)],
-  ];
+  Timer? _timer;
+  int _secondsSpent = 0;
 
-  int currentIndex = 0;
-  List<Color> currentGradient = [Color(0xFF5F0A87), Color(0xFF20BF55)];
+  static const int targetSeconds = 300;
+  static const int rewardXP = 50;
+  static const int primaryPurple = 0xFF9C6ADE;
+
+  static const String chatTimeKey = "chat_time";
+  static const String chatDoneKey = "challenge_chat_done";
+  static const String chatCompletedAtKey = "challenge_chat_completed_at";
+  static const String xpKey = "total_xp";
+
+  bool challengeDone = false;
+  Duration? remainingTime;
 
   @override
   void initState() {
     super.initState();
-    _animateGradient();
-
-    // First AI greeting based on level
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _addAIMessage(_levelGreeting(widget.level));
-    });
+    _initializeChallenge();
   }
 
-  void _animateGradient() {
-    Future.delayed(const Duration(seconds: 4), () {
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  String _emojiForMood(String mood) {
+    switch (mood.toLowerCase()) {
+      case "happy":
+        return "😊";
+      case "relaxed":
+        return "😌";
+      case "sad":
+        return "💙";
+      case "angry":
+        return "😡";
+      default:
+        return "🙂";
+    }
+  }
+
+  Future<void> _initializeChallenge() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    challengeDone = prefs.getBool(chatDoneKey) ?? false;
+
+    if (challengeDone) {
+      final completedAt = prefs.getInt(chatCompletedAtKey);
+
+      if (completedAt != null) {
+        final completedTime = DateTime.fromMillisecondsSinceEpoch(completedAt);
+        final diff = DateTime.now().difference(completedTime);
+
+        if (diff >= const Duration(hours: 24)) {
+          await prefs.setBool(chatDoneKey, false);
+          await prefs.remove(chatCompletedAtKey);
+          await prefs.setInt(chatTimeKey, 0);
+          challengeDone = false;
+          _secondsSpent = 0;
+        } else {
+          remainingTime = const Duration(hours: 24) - diff;
+        }
+      }
+    }
+
+    if (!challengeDone) {
+      _secondsSpent = prefs.getInt(chatTimeKey) ?? 0;
+      _startTimer();
+    }
+
+    if (mounted) setState(() {});
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (!mounted) return;
-      setState(() {
-        currentIndex = (currentIndex + 1) % gradientColors.length;
-        currentGradient = gradientColors[currentIndex];
-      });
-      _animateGradient();
+
+      if (_secondsSpent >= targetSeconds) {
+        timer.cancel();
+        await _completeChallenge();
+        return;
+      }
+
+      _secondsSpent++;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(chatTimeKey, _secondsSpent);
+
+      if (mounted) setState(() {});
     });
   }
 
-  String _levelGreeting(LearningLevel level) {
-    switch (level) {
-      case LearningLevel.beginner:
-        return "Hi 👋 I’m your English buddy! Let’s start easy. Tell me: What is your name?";
-      case LearningLevel.intermediate:
-        return "Hey 😄 Let’s practice Intermediate English. Tell me about your day in 2-3 sentences.";
-      case LearningLevel.advanced:
-        return "Welcome 🧠 Advanced mode! Let’s discuss: Do you think social media improves communication? Give your opinion.";
-    }
+  Future<void> _completeChallenge() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (prefs.getBool(chatDoneKey) ?? false) return;
+
+    await prefs.setBool(chatDoneKey, true);
+    await prefs.setInt(
+      chatCompletedAtKey,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+
+    int currentXP = prefs.getInt(xpKey) ?? 0;
+    await prefs.setInt(xpKey, currentXP + rewardXP);
+
+    challengeDone = true;
+
+    if (mounted) setState(() {});
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Daily Challenge Completed! +50 XP"),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
-  String _aiReplyForLevel(LearningLevel level, String userText) {
-    switch (level) {
-      case LearningLevel.beginner:
-        return "Nice! ✅ Try this sentence:\n\"I am learning English every day.\" \nNow you type: \"I am ...\"";
-      case LearningLevel.intermediate:
-        return "Good one 🔥 Now improve it with more detail.\nTry adding:\n- time\n- reason\nExample: \"Today I felt happy because...\"";
-      case LearningLevel.advanced:
-        return "Great thought 👌 Now refine it with advanced structure:\nUse:\n- However,\n- In my opinion,\n- On the other hand\nRewrite your answer with these connectors.";
-    }
+  String get _timeLabel {
+    int min = _secondsSpent ~/ 60;
+    int sec = _secondsSpent % 60;
+    return "$min:${sec.toString().padLeft(2, '0')} / 5:00";
   }
 
-  void _addAIMessage(String text) {
-    setState(() {
-      messages.add({"sender": "AI", "text": text});
-    });
-    _scrollToBottom();
-  }
+  Future<void> sendMessage() async {
+    if (_controller.text.trim().isEmpty) return;
 
-  void sendMessage() {
     final userText = _controller.text.trim();
-    if (userText.isEmpty) return;
 
     setState(() {
       messages.add({"sender": "You", "text": userText});
@@ -98,17 +160,25 @@ class _ChatLearningPageState extends State<ChatLearningPage>
 
     _scrollToBottom();
 
-    Future.delayed(const Duration(seconds: 1), () {
+    try {
+      final aiReply = await ChatController.sendMessage(userText);
+
       if (!mounted) return;
+
       setState(() {
-        messages.add({
-          "sender": "AI",
-          "text": _aiReplyForLevel(widget.level, userText),
-        });
+        messages.add({"sender": "AI", "text": aiReply});
         isTyping = false;
       });
-      _scrollToBottom();
-    });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        messages.add({"sender": "AI", "text": "Something went wrong."});
+        isTyping = false;
+      });
+    }
+
+    _scrollToBottom();
   }
 
   void _scrollToBottom() {
@@ -125,12 +195,14 @@ class _ChatLearningPageState extends State<ChatLearningPage>
 
   @override
   Widget build(BuildContext context) {
+    final Color purple = const Color(primaryPurple);
+
     return WillPopScope(
       onWillPop: () async {
-        // Handle device back
+        // Navigate back to HomeScreen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
         return false;
       },
@@ -140,172 +212,143 @@ class _ChatLearningPageState extends State<ChatLearningPage>
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => HomeScreen()),
+                MaterialPageRoute(builder: (_) => const HomeScreen()),
               );
             },
           ),
+          title: const Text(
+            "Chat Learning 💬",
+            style: TextStyle(
+              fontFamily: 'Cinzel',
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 7, 7, 7),
+            ),
+          ),
+          centerTitle: true,
         ),
-        body: AnimatedContainer(
-          duration: const Duration(seconds: 4),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: currentGradient,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        body: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("assets/bg.png"),
+              fit: BoxFit.cover,
             ),
           ),
           child: SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 16),
-                // HEADER
+                const SizedBox(height: 10),
                 Text(
-                  "Chat Learning 💬",
+                  challengeDone
+                      ? "Challenge Completed"
+                      : "Progress: $_timeLabel",
                   style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontFamily: 'Cinzel',
+                    color: Color.fromARGB(255, 7, 7, 7),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  "Level: ${widget.level.label}",
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                const SizedBox(height: 8),
+                AnimatedBuilder(
+                  animation: MoodController.instance,
+                  builder: (context, _) {
+                    final mood = MoodController.instance.mood;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "Mood: ${_emojiForMood(mood)} $mood",
+                        style: const TextStyle(
+                          fontFamily: 'Cinzel',
+                          color: Color.fromARGB(255, 7, 7, 7),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(height: 16),
-                // CHAT LIST
+                const SizedBox(height: 10),
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: messages.length + (isTyping ? 1 : 0),
-                    itemBuilder: (context, index) {
+                    itemBuilder: (_, index) {
                       if (isTyping && index == messages.length) {
-                        return _typingBubble();
+                        return const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Text(
+                            "AI typing...",
+                            style: TextStyle(
+                              fontFamily: 'Cinzel',
+                              color: Color.fromARGB(255, 7, 7, 7),
+                            ),
+                          ),
+                        );
                       }
 
                       final msg = messages[index];
                       final isYou = msg["sender"] == "You";
 
-                      return _animatedBubble(text: msg["text"]!, isYou: isYou);
+                      return Align(
+                        alignment: isYou
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: isYou ? purple : Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Text(
+                            msg["text"]!,
+                            style: TextStyle(
+                              fontFamily: 'Cinzel',
+                              color: isYou ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),
-                // INPUT BAR
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(30),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _controller,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: const InputDecoration(
-                                  hintText: "Type your message...",
-                                  hintStyle: TextStyle(color: Colors.white70),
-                                  border: InputBorder.none,
-                                ),
-                                onSubmitted: (_) => sendMessage(),
-                              ),
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          style: const TextStyle(
+                              fontFamily: 'Cinzel', color: Colors.white),
+                          decoration: const InputDecoration(
+                            hintText: "Type...",
+                            hintStyle: TextStyle(
+                              fontFamily: 'Cinzel',
+                              color: Colors.black,
                             ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.send_rounded,
-                                color: Colors.white,
-                              ),
-                              onPressed: sendMessage,
-                            )
-                          ],
+                            border: InputBorder.none,
+                          ),
+                          onSubmitted: (_) => sendMessage(),
                         ),
                       ),
-                    ),
+                      IconButton(
+                        icon: Icon(Icons.send, color: purple),
+                        onPressed: sendMessage,
+                      )
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 🔥 Animated message bubble
-  Widget _animatedBubble({required String text, required bool isYou}) {
-    return TweenAnimationBuilder(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 300),
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(isYou ? 40 * (1 - value) : -40 * (1 - value), 0),
-            child: child,
-          ),
-        );
-      },
-      child: Align(
-        alignment: isYou ? Alignment.centerRight : Alignment.centerLeft,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Container(
-              margin: const EdgeInsets.symmetric(vertical: 6),
-              padding: const EdgeInsets.all(14),
-              constraints:
-                  BoxConstraints(maxWidth: constraints.maxWidth * 0.75),
-              decoration: BoxDecoration(
-                color:
-                    isYou ? Colors.deepPurple : Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Text(
-                text,
-                style: TextStyle(
-                  color: isYou ? Colors.white : Colors.black87,
-                  fontSize: 15,
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  // 🤖 AI typing indicator
-  Widget _typingBubble() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: const Text(
-          "AI is typing...",
-          style: TextStyle(
-            fontStyle: FontStyle.italic,
-            color: Colors.black54,
           ),
         ),
       ),

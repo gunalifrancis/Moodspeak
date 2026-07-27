@@ -1,0 +1,38 @@
+{
+  "empty_input": {
+    "responses": [
+      "😌 Let’s slow down. Say one simple sentence.",
+      "Take a breath 😌 Try again calmly."
+    ]
+  },
+
+  "greeting": {
+    "inputs": ["hi", "hello", "hey"],
+    "responses": [
+      "Hi 😌 Let’s relax and practice English.",
+      "Hello 👍 Take it easy, we’ll learn calmly."
+    ]
+  },
+
+  "practice": {
+    "inputs": ["practice", "learn", "improve", "english", "speaking"],
+    "responses": [
+      "Alright 😌 Try: I am feeling better now.",
+      "Okay 👍 Say one simple English sentence."
+    ]
+  },
+
+  "sentence_feedback": {
+    "responses": [
+      "Good 👍 Keep it simple and calm.",
+      "Nice 😌 Let’s continue slowly."
+    ]
+  },
+
+  "fallback": {
+    "responses": [
+      "😌 Calm down and try again.",
+      "Say one short English sentence."
+    ]
+  }
+}

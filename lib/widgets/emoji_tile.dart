@@ -22,9 +22,9 @@ class EmojiTile extends StatelessWidget {
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.15),
+            color: const Color.fromARGB(255, 24, 23, 23).withOpacity(0.15),
             border: Border.all(
-              color: Colors.white.withOpacity(0.35),
+              color: const Color.fromARGB(255, 12, 11, 11).withOpacity(0.35),
               width: 2,
             ),
           ),
@@ -41,7 +41,7 @@ class EmojiTile extends StatelessWidget {
             fontFamily: 'Cinzel',
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: Color.fromARGB(255, 12, 12, 12),
             letterSpacing: 1,
           ),
           textAlign: TextAlign.center,
